@@ -1,0 +1,1291 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171816">
+  <title>EDMUNDS · Modelación de suelo</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #171816;
+      --surface: #20221e;
+      --surface-raised: #282a25;
+      --surface-deep: #11130f;
+      --line: #3a3c35;
+      --text: #eee8dc;
+      --muted: #b7b09f;
+      --amber: #e1ad5c;
+      --terra: #cb7553;
+      --forest: #6d9b70;
+      --copper: #ad714a;
+      --red: #e2745b;
+      --green: #92bd83;
+      --focus: #f1c777;
+      --font: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 74% -10%, rgba(225,173,92,.12), transparent 38rem),
+        linear-gradient(150deg, #171816 0%, #1b1d19 52%, #131511 100%);
+      font: 15px/1.5 var(--font);
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .shell { width: min(1480px, calc(100% - 40px)); margin: 0 auto; }
+    .masthead {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 24px; padding: 27px 0 21px; border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 15px; }
+    .brand-symbol {
+      display: grid; place-items: center; width: 48px; height: 48px;
+      color: #21170d; background: var(--amber); border-radius: 15px;
+      font-size: 23px; font-weight: 800; box-shadow: 0 7px 22px #0005;
+    }
+    h1 { margin: 0; font-size: 27px; line-height: 1.15; letter-spacing: .11em; }
+    .brand-subtitle { margin-top: 4px; color: var(--muted); font-size: 13px; }
+    .masthead-actions { display: flex; gap: 9px; }
+    .button {
+      border: 1px solid var(--line); border-radius: 9px; padding: 10px 14px;
+      background: #ffffff06; cursor: pointer; font-weight: 650;
+      transition: background .16s ease, border-color .16s ease, transform .16s ease;
+    }
+    .button:hover { transform: translateY(-1px); background: #ffffff0c; border-color: #77715f; }
+    .button:disabled { cursor: not-allowed; opacity: .45; transform: none; }
+    .button-primary {
+      color: #21180d; border-color: #efc978; background: var(--amber);
+      font-size: 15px; font-weight: 800; letter-spacing: .035em;
+    }
+    .button-primary:hover { background: #f0c576; }
+    .button-quiet { color: var(--muted); }
+    .intro {
+      display: flex; justify-content: space-between; align-items: end; gap: 24px;
+      padding: 24px 0 20px;
+    }
+    .intro h2 { max-width: 760px; margin: 0; font-size: 23px; line-height: 1.25; }
+    .intro p { max-width: 68ch; margin: 8px 0 0; color: var(--muted); }
+    .offline-tag {
+      flex: none; border: 1px solid #71816a; border-radius: 99px; padding: 6px 11px;
+      color: #bdd0ae; font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+    }
+    .steps { display: grid; gap: 11px; }
+    .step {
+      overflow: clip; border: 1px solid var(--line); border-radius: 13px;
+      background: rgba(32,34,30,.94); box-shadow: 0 8px 22px #0002;
+    }
+    .step-heading {
+      display: flex; align-items: center; width: 100%; padding: 14px 17px;
+      border: 0; background: transparent; text-align: left; cursor: pointer;
+    }
+    .step-heading:hover { background: #ffffff04; }
+    .step-index {
+      display: grid; place-items: center; width: 31px; height: 31px; margin-right: 12px;
+      border: 1px solid #9e7947; border-radius: 9px; color: var(--amber);
+      font-weight: 800; font-size: 13px;
+    }
+    .step-title { font-size: 15px; font-weight: 760; letter-spacing: .065em; }
+    .step-hint { margin-left: 10px; color: var(--muted); font-size: 12px; }
+    .step-chevron { margin-left: auto; color: var(--muted); font-size: 18px; }
+    .step-body { padding: 1px 17px 18px; border-top: 1px solid #ffffff0a; }
+    .step.closed .step-body { display: none; }
+    .step.closed .step-chevron { transform: rotate(-90deg); }
+    .form-grid {
+      display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 13px;
+      padding-top: 15px;
+    }
+    .field { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+    .field label, .field-label {
+      color: #c8c1b2; font-size: 11px; font-weight: 700; letter-spacing: .065em;
+      text-transform: uppercase;
+    }
+    .field input, .field select {
+      width: 100%; min-height: 39px; padding: 8px 10px;
+      border: 1px solid #4a4c44; border-radius: 7px;
+      background: #11130f; color: var(--text);
+    }
+    input::placeholder { color: #8d897f; opacity: 1; }
+    .field-help { color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .unit-table-wrap { overflow-x: auto; margin-top: 14px; }
+    .unit-table { width: 100%; min-width: 820px; border-collapse: collapse; }
+    .unit-table th {
+      padding: 8px 7px; color: #c8c1b2; border-bottom: 1px solid var(--line);
+      text-align: left; font-size: 10px; letter-spacing: .06em; text-transform: uppercase;
+    }
+    .unit-table td { padding: 6px; border-bottom: 1px solid #ffffff0a; }
+    .unit-table input {
+      width: 100%; min-width: 75px; height: 36px; padding: 6px 8px;
+      border: 1px solid #4a4c44; border-radius: 6px; color: var(--text); background: #11130f;
+    }
+    .unit-table .remove-row { min-width: 38px; padding: 5px 9px; color: #e7a18a; }
+    .subhead {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      margin: 15px 0 0;
+    }
+    .subhead h3 { margin: 0; font-size: 14px; }
+    .section-note {
+      margin: 13px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55;
+    }
+    .inline-check { display: flex; align-items: center; gap: 8px; min-height: 39px; color: var(--text); }
+    .inline-check input { width: 16px; height: 16px; accent-color: var(--amber); }
+    .form-error, .notice {
+      display: none; margin-top: 13px; padding: 10px 12px; border-radius: 8px;
+      color: #ffe2d8; border: 1px solid #9b4e3d; background: #612c231c;
+    }
+    .form-error.visible, .notice.visible { display: block; }
+    .example-note {
+      display: none; margin: 15px 0; padding: 13px 15px; border-radius: 9px;
+      border: 1px solid #806438; color: #e8d8b7; background: #50391825;
+      font-size: 13px; line-height: 1.55;
+    }
+    .example-note.visible { display: block; }
+    .run-row { display: flex; justify-content: center; padding: 19px 0 8px; }
+    .run-row .button { min-width: 300px; min-height: 52px; }
+    .results { display: none; padding: 19px 0 48px; }
+    .results.visible { display: block; }
+    .results-title-row {
+      display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 14px;
+    }
+    .results-title-row h2 { margin: 0; font-size: 21px; }
+    .run-status { color: var(--muted); font-size: 12px; text-align: right; }
+    .hud {
+      display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 1px;
+      overflow: hidden; border: 1px solid var(--line); border-radius: 10px;
+      background: var(--line);
+    }
+    .hud-item { min-width: 0; padding: 11px 13px; background: #1c1e1a; }
+    .hud-label { color: var(--muted); font-size: 10px; letter-spacing: .07em; text-transform: uppercase; }
+    .hud-value { margin-top: 3px; color: var(--amber); font-size: 18px; font-weight: 780; }
+    .player {
+      display: grid; grid-template-columns: auto auto minmax(140px,1fr) auto auto auto;
+      align-items: center; gap: 10px; margin: 13px 0 17px; padding: 11px 13px;
+      border: 1px solid var(--line); border-radius: 9px; background: #1e201c;
+    }
+    .player .button { padding: 7px 10px; }
+    .player input[type=range] { width: 100%; accent-color: var(--amber); }
+    .player select {
+      min-height: 35px; padding: 5px 8px; border: 1px solid #4a4c44;
+      border-radius: 7px; background: #11130f; color: var(--text);
+    }
+    .day-readout { color: #e9d7b4; font-weight: 700; white-space: nowrap; }
+    .visual-layout { display: grid; grid-template-columns: minmax(0,1.7fr) minmax(280px,1fr); gap: 13px; }
+    .view-panel, .chart-panel {
+      min-width: 0; border: 1px solid var(--line); border-radius: 11px; background: #1b1d19;
+    }
+    .panel-head {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      padding: 12px 14px 9px;
+    }
+    .panel-head h3 { margin: 0; font-size: 13px; letter-spacing: .035em; }
+    .panel-head span { color: var(--muted); font-size: 11px; }
+    .render-canvas, .section-canvas, .plot-canvas, .distance-canvas {
+      display: block; width: 100%; border-radius: 0 0 10px 10px;
+    }
+    .render-canvas { height: 430px; touch-action: none; cursor: grab; }
+    .render-canvas.dragging { cursor: grabbing; }
+    .section-canvas { height: 220px; }
+    .color-legend { display: flex; align-items: center; gap: 9px; padding: 8px 13px 12px; color: var(--muted); font-size: 10px; }
+    .legend-ramp { height: 7px; flex: 1; border-radius: 9px; background: var(--surface-raised); }
+    .view-footer { padding: 0 13px 11px; color: var(--muted); font-size: 11px; }
+    .plot-section { margin-top: 21px; }
+    .plot-section > h3 { margin: 0 0 5px; font-size: 16px; }
+    .plot-intro { margin: 0 0 12px; color: var(--muted); font-size: 12px; }
+    .plots-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+    .chart-panel { overflow: hidden; }
+    .plot-canvas { height: 275px; }
+    .distance-panel { margin-top: 13px; }
+    .distance-canvas { height: 300px; }
+    .milestone-wrap { overflow-x: auto; margin-top: 15px; border: 1px solid var(--line); border-radius: 9px; }
+    .milestone-table { width: 100%; min-width: 730px; border-collapse: collapse; }
+    .milestone-table th, .milestone-table td { padding: 9px 10px; border-bottom: 1px solid #ffffff0b; text-align: right; }
+    .milestone-table th:first-child, .milestone-table td:first-child { text-align: left; }
+    .milestone-table th { color: #c8c1b2; background: #ffffff04; font-size: 10px; letter-spacing: .05em; text-transform: uppercase; }
+    .method-note { margin: 15px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .toast {
+      position: fixed; z-index: 5; left: 50%; bottom: 20px; transform: translate(-50%,20px);
+      max-width: min(600px, calc(100% - 30px)); padding: 11px 15px; border-radius: 8px;
+      opacity: 0; pointer-events: none; color: #f5ead5; background: #34352e;
+      border: 1px solid #68634f; transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast.visible { opacity: 1; transform: translate(-50%,0); }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+    @media (max-width: 1000px) {
+      .form-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .hud { grid-template-columns: repeat(3,minmax(0,1fr)); }
+      .visual-layout { grid-template-columns: 1fr; }
+      .render-canvas { height: 390px; }
+    }
+    @media (max-width: 650px) {
+      .shell { width: min(100% - 24px, 1480px); }
+      .masthead { align-items: flex-start; flex-direction: column; gap: 15px; }
+      .masthead-actions { width: 100%; }
+      .masthead-actions .button { flex: 1; }
+      .intro { align-items: flex-start; flex-direction: column; gap: 12px; }
+      .intro h2 { font-size: 20px; }
+      .form-grid { grid-template-columns: 1fr 1fr; gap: 11px; }
+      .step-hint { display: none; }
+      .run-row .button { min-width: 0; width: 100%; }
+      .hud { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .player { grid-template-columns: auto auto 1fr; }
+      .player input[type=range] { grid-column: 1 / -1; grid-row: 2; }
+      .day-readout { grid-column: 2 / -1; text-align: right; }
+      .plots-grid { grid-template-columns: 1fr; }
+      .render-canvas { height: 340px; }
+      .results-title-row { align-items: flex-start; flex-direction: column; }
+      .run-status { text-align: left; }
+    }
+    @media (max-width: 390px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .player { gap: 6px; }
+      .hud-value { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div class="brand">
+        <div class="brand-symbol" aria-hidden="true">E</div>
+        <div>
+          <h1>EDMUNDS</h1>
+          <div class="brand-subtitle">Simulación hidrodinámica de contaminantes en el suelo</div>
+        </div>
+      </div>
+      <div class="masthead-actions">
+        <button class="button" id="loadExample" type="button">Cargar ejemplo</button>
+        <button class="button button-quiet" id="clearAll" type="button">Vaciar todo</button>
+      </div>
+    </header>
+
+    <section class="intro">
+      <div>
+        <h2>Modela el transporte. Explora la pluma. Exporta las lecturas.</h2>
+        <p>Define el suelo, la sustancia, el vertimiento y la malla. La vista tridimensional, los cortes y cada curva usan los mismos resultados y el mismo reloj.</p>
+      </div>
+      <span class="offline-tag">Archivo autónomo · sin conexión</span>
+    </section>
+
+    <div class="example-note" id="exampleNote" role="note"></div>
+    <div class="steps" id="steps">
+      <section class="step">
+        <button class="step-heading" type="button" aria-expanded="true">
+          <span class="step-index">1</span><span class="step-title">Suelo</span>
+          <span class="step-hint">Perfiles propios o unidades cartográficas</span><span class="step-chevron">⌄</span>
+        </button>
+        <div class="step-body">
+          <div class="subhead">
+            <h3>Perfiles que participan en la corrida</h3>
+            <button class="button" type="button" id="addSoil">＋ Agregar perfil</button>
+          </div>
+          <p class="section-note">Cada perfil se simula por separado. La tabla comienza vacía; añade una fila por suelo y registra la procedencia de sus datos.</p>
+          <div class="unit-table-wrap">
+            <table class="unit-table">
+              <thead><tr>
+                <th>UCS / nombre</th><th>Textura</th><th>K (m/d)</th><th>Gradiente i</th>
+                <th>Humedad móvil Me</th><th>ρb (kg/m³)</th><th>Espesor Znso (m)</th><th>Quitar</th>
+              </tr></thead>
+              <tbody id="soilRows"></tbody>
+            </table>
+          </div>
+          <div class="field" style="max-width:620px;margin-top:10px">
+            <label for="soilSource">Fuente / cita de los perfiles</label>
+            <input id="soilSource" placeholder="Documento, página, perfil y ubicación del archivo">
+          </div>
+        </div>
+      </section>
+
+      <section class="step">
+        <button class="step-heading" type="button" aria-expanded="true">
+          <span class="step-index">2</span><span class="step-title">Contaminante</span>
+          <span class="step-hint">Parámetros de transporte y fuente documental</span><span class="step-chevron">⌄</span>
+        </button>
+        <div class="step-body">
+          <div class="form-grid">
+            <div class="field"><label for="chemical">Sustancia / mezcla</label><input id="chemical" placeholder="Nombre del contaminante"></div>
+            <div class="field"><label for="cas">CAS (si aplica)</label><input id="cas" placeholder="Número CAS"></div>
+            <div class="field"><label for="family">Familia</label><input id="family" placeholder="p. ej., solvente, metal"></div>
+            <div class="field"><label for="koc">Koc (mL/g)</label><input id="koc" type="number" min="0" step="any"></div>
+            <div class="field"><label for="foc">Carbono orgánico foc (%)</label><input id="foc" type="number" min="0" max="100" step="any"></div>
+            <div class="field"><label for="kdManual">Kd directo (m³/kg, opcional)</label><input id="kdManual" type="number" min="0" step="any"></div>
+            <div class="field"><label for="henry">Henry adimensional H′</label><input id="henry" type="number" min="0" step="any"></div>
+            <div class="field"><label for="dm">Difusión molecular DM (m²/d)</label><input id="dm" type="number" min="0" step="any"></div>
+            <div class="field"><label for="diffExponent">Exponente c de Me</label><input id="diffExponent" type="number" min="0" step="any"></div>
+            <div class="field"><label for="alphaL">Dispersividad longitudinal αL (m)</label><input id="alphaL" type="number" min="0" step="any"></div>
+            <div class="field"><label for="alphaT">Dispersividad transversal αT (m)</label><input id="alphaT" type="number" min="0" step="any"></div>
+            <div class="field"><label for="halfLife">Vida media t½ (d, opcional)</label><input id="halfLife" type="number" min="0" step="any"></div>
+            <div class="field"><label for="detectThreshold">Umbral detectable (mg/L)</label><input id="detectThreshold" type="number" min="0" step="any"></div>
+            <div class="field"><label for="chemicalSource">Fuente / hoja / fila / columna</label><input id="chemicalSource" placeholder="Cita verificable o digitado a mano"></div>
+          </div>
+          <p class="section-note">El modelo usa Kd (directo o calculado como Koc × foc / 1000), Me, ρb y los parámetros de dispersión. Henry se informa, pero no entra en esta solución acuosa; si no se aporta t½, el decaimiento se fija en cero. Los RSL de EPA son una guía extranjera, no una norma colombiana.</p>
+        </div>
+      </section>
+
+      <section class="step">
+        <button class="step-heading" type="button" aria-expanded="true">
+          <span class="step-index">3</span><span class="step-title">Vertimiento</span>
+          <span class="step-hint">La forma de la curva sigue el modo seleccionado</span><span class="step-chevron">⌄</span>
+        </button>
+        <div class="step-body">
+          <div class="form-grid">
+            <div class="field">
+              <label for="sourceMode">Tipo de vertimiento</label>
+              <select id="sourceMode"><option value="">Selecciona una opción</option><option value="continuous">Continuo · C₀ sostenida</option><option value="pulse">Momentáneo · masa de golpe</option></select>
+            </div>
+            <div class="field"><label for="sourceX0">Caja fuente · X inicial (m)</label><input id="sourceX0" type="number" min="0" step="any"></div>
+            <div class="field"><label for="sourceX1">Caja fuente · X final (m)</label><input id="sourceX1" type="number" min="0" step="any"></div>
+            <div class="field"><label for="sourceY0">Caja fuente · Y inicial (m)</label><input id="sourceY0" type="number" min="0" step="any"></div>
+            <div class="field"><label for="sourceY1">Caja fuente · Y final (m)</label><input id="sourceY1" type="number" min="0" step="any"></div>
+            <div class="field"><label for="sourceZ0">Caja fuente · Z inicial (m)</label><input id="sourceZ0" type="number" min="0" step="any"></div>
+            <div class="field"><label for="sourceZ1">Caja fuente · Z final (m)</label><input id="sourceZ1" type="number" min="0" step="any"></div>
+            <div class="field"><label for="sourceC0">C₀ de la fuente (mg/L)</label><input id="sourceC0" type="number" min="0" step="any"></div>
+            <div class="field"><label for="sourceMass">Masa momentánea (kg)</label><input id="sourceMass" type="number" min="0" step="any"></div>
+            <div class="field"><label for="sourceClose">La fuente cierra en (d, opcional)</label><input id="sourceClose" type="number" min="0" step="any" placeholder="Vacío = permanente"></div>
+          </div>
+          <p class="section-note">En modo momentáneo, la masa se distribuye en la caja de fuente de la malla. En modo continuo, la concentración impuesta se mantiene en esa caja hasta el cierre indicado.</p>
+        </div>
+      </section>
+
+      <section class="step">
+        <button class="step-heading" type="button" aria-expanded="true">
+          <span class="step-index">4</span><span class="step-title">Malla y geometría</span>
+          <span class="step-hint">Espacio, resolución, cortes y coordenadas de salida</span><span class="step-chevron">⌄</span>
+        </button>
+        <div class="step-body">
+          <div class="form-grid">
+            <div class="field"><label for="domainX">Longitud X (m)</label><input id="domainX" type="number" min="0" step="any"></div>
+            <div class="field"><label for="domainY">Ancho Y (m)</label><input id="domainY" type="number" min="0" step="any"></div>
+            <div class="field"><label for="domainZ">Profundidad Z (m)</label><input id="domainZ" type="number" min="0" step="any"></div>
+            <div class="field"><label for="nx">Celdas en X</label><input id="nx" type="number" min="4" max="120" step="1"></div>
+            <div class="field"><label for="ny">Celdas en Y</label><input id="ny" type="number" min="4" max="60" step="1"></div>
+            <div class="field"><label for="nz">Celdas en Z</label><input id="nz" type="number" min="4" max="60" step="1"></div>
+            <div class="field"><label for="simulationDays">Duración de la corrida (d)</label><input id="simulationDays" type="number" min="0" step="any"></div>
+            <div class="field"><label for="sectionSpacing">Separación de tramos (m)</label><input id="sectionSpacing" type="number" min="0" step="any"></div>
+            <div class="field"><label for="customSections">Secciones x personalizadas (m)</label><input id="customSections" placeholder="Opcional: 10; 25; 50"></div>
+            <div class="field"><label for="azimuth">Rumbo del flujo (°)</label><input id="azimuth" type="number" step="any"></div>
+            <div class="field"><label for="origin">Origen para SIG (opcional)</label><input id="origin" placeholder="Norte, Este o latitud, longitud"></div>
+            <div class="field"><label for="rotation">Rotación del dominio (°)</label><input id="rotation" type="number" step="any"></div>
+          </div>
+          <p class="section-note">La corrida calcula el paso de tiempo a partir de la estabilidad de advección y difusión. Si no se ingresan coordenadas geográficas, las exportaciones conservan las distancias como metros locales.</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="form-error" id="formError" role="alert"></div>
+    <div class="run-row"><button class="button button-primary" id="runSimulation" type="button">▶ INICIAR SIMULACIÓN</button></div>
+
+    <section class="results" id="results" aria-live="polite">
+      <div class="results-title-row">
+        <h2>Corrida de transporte</h2>
+        <div class="run-status" id="runStatus"></div>
+      </div>
+      <div class="hud">
+        <div class="hud-item"><div class="hud-label">Día simulado</div><div class="hud-value" id="hudDay">s/d</div></div>
+        <div class="hud-item"><div class="hud-label">Frente de avance</div><div class="hud-value" id="hudFront">s/d</div></div>
+        <div class="hud-item"><div class="hud-label">C máxima</div><div class="hud-value" id="hudCmax">s/d</div></div>
+        <div class="hud-item"><div class="hud-label">Volumen sobre umbral</div><div class="hud-value" id="hudVolume">s/d</div></div>
+        <div class="hud-item"><div class="hud-label">Masa sobre umbral</div><div class="hud-value" id="hudMass">s/d</div></div>
+        <div class="hud-item"><div class="hud-label">Cierre de masa (día actual)</div><div class="hud-value" id="hudClosure">s/d</div></div>
+      </div>
+      <div class="player">
+        <button class="button" id="playPause" type="button">▶ Reproducir</button>
+        <select id="playSpeed" aria-label="Velocidad de reproducción"><option value="0.5">0,5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
+        <input id="timeSlider" type="range" min="0" max="1" step="1" value="0" aria-label="Día de la simulación">
+        <span class="day-readout" id="dayReadout">Día s/d</span>
+        <select id="soilView" aria-label="Perfil de suelo mostrado"><option value="0">Perfil</option></select>
+        <button class="button" id="exportCsv" type="button">Exportar CSV</button>
+      </div>
+      <div class="visual-layout">
+        <section class="view-panel">
+          <div class="panel-head"><h3>Superficie 3D de concentración</h3><span>Arrastra para orbitar · rueda para acercar</span></div>
+          <canvas class="render-canvas" id="plume3d" aria-label="Superficie tridimensional de la pluma"></canvas>
+          <div class="color-legend"><span>Umbral detectable</span><span class="legend-ramp"></span><span>Concentración alta</span></div>
+          <div class="view-footer" id="plumeReadout">La malla se representa como una superficie continua interpolada, no como bloques.</div>
+        </section>
+        <section class="view-panel">
+          <div class="panel-head"><h3>Corte vertical X–Z</h3><span id="sectionDay">s/d</span></div>
+          <canvas class="section-canvas" id="section2d" aria-label="Corte vertical de la concentración"></canvas>
+          <div class="color-legend"><span>Fondo</span><span class="legend-ramp"></span><span>Máximo</span></div>
+          <div class="view-footer">El corte y la pluma 3D muestran el mismo perfil y el mismo instante.</div>
+        </section>
+      </div>
+      <section class="plot-section">
+        <h3>Curvas de arribo por tramo</h3>
+        <p class="plot-intro">Cada tramo grafica la concentración calculada en mg/L sobre el eje del flujo y a la altura y posición central de la caja fuente. Todas las gráficas comparten la misma escala vertical para comparar sus concentraciones. Las curvas avanzan con el mismo día que la pluma 3D, sin mostrar días futuros ni ajustar una forma ideal; los puntos D, 25 %, 50 %, 75 % y pico marcan hitos de cada serie.</p>
+        <div class="plots-grid" id="plotsGrid"></div>
+      </section>
+      <section class="plot-section">
+        <h3>Concentración según la distancia</h3>
+        <p class="plot-intro">Cinco cortes temporales del mismo conjunto de resultados. Los valores de tiempo se indican en la leyenda y el eje termina en la longitud ingresada.</p>
+        <div class="chart-panel distance-panel">
+          <div class="panel-head"><h3>Perfiles longitudinales</h3><span>Concentración (mg/L) frente a distancia (m)</span></div>
+          <canvas class="distance-canvas" id="distanceChart"></canvas>
+        </div>
+      </section>
+      <div class="milestone-wrap">
+        <table class="milestone-table">
+          <thead><tr><th>Perfil</th><th>Sección</th><th>Detectable (d)</th><th>25 % (d)</th><th>50 % (d)</th><th>75 % (d)</th><th>100 % (d)</th></tr></thead>
+          <tbody id="milestoneRows"></tbody>
+        </table>
+      </div>
+      <p class="method-note" id="methodNote"></p>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    'use strict';
+    const CL_RAMPA = [
+      [0.00, [47, 75, 66]], [0.18, [92, 119, 76]], [0.36, [154, 151, 70]],
+      [0.54, [205, 166, 79]], [0.72, [216, 128, 75]], [0.88, [194, 82, 64]], [1.00, [119, 47, 48]]
+    ];
+    const CURVE_COLORS = ['#e1ad5c', '#6d9b70', '#cb7553', '#93a2a0', '#b78457', '#a68bba'];
+    const formIds = [
+      'soilSource','chemical','cas','family','koc','foc','kdManual','henry','dm','diffExponent',
+      'alphaL','alphaT','halfLife','detectThreshold','chemicalSource','sourceMode','sourceC0',
+      'sourceMass','sourceClose','sourceX0','sourceX1','sourceY0','sourceY1','sourceZ0','sourceZ1',
+      'domainX','domainY','domainZ','nx','ny','nz','simulationDays',
+      'sectionSpacing','customSections','azimuth','origin','rotation'
+    ];
+    const $ = (id) => document.getElementById(id);
+    const app = { runs: [], currentCut: 0, currentSoil: 0, playing: false, raf: 0, lastFrame: 0, lastPlotCut: -1, yaw: -0.72, pitch: 0.34, zoom: 1, drag: null, example: false };
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+    const num = (id) => {
+      const value = $(id).value.trim();
+      return value === '' ? NaN : Number(value);
+    };
+    const fmt = (value, digits = 3) => Number.isFinite(value) ? value.toFixed(digits) : 's/d';
+    const fmtDay = (value) => Number.isFinite(value) ? `${fmt(value, 1)} d` : 'No alcanzado';
+
+    function toast(message) {
+      const node = $('toast');
+      node.textContent = message;
+      node.classList.add('visible');
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => node.classList.remove('visible'), 2600);
+    }
+
+    function colorAt(value) {
+      const t = clamp(value, 0, 1);
+      let n = 0;
+      while (n < CL_RAMPA.length - 2 && t > CL_RAMPA[n + 1][0]) n++;
+      const [a, ca] = CL_RAMPA[n], [b, cb] = CL_RAMPA[n + 1];
+      const f = (t - a) / (b - a);
+      return ca.map((c, i) => Math.round(c + (cb[i] - c) * f));
+    }
+    function cssColor(value, alpha = 1) {
+      const c = colorAt(value);
+      return `rgba(${c[0]},${c[1]},${c[2]},${alpha})`;
+    }
+    function canvasContext(canvas, cssHeight) {
+      const rect = canvas.getBoundingClientRect();
+      const visibleHeight = rect.height || cssHeight;
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const width = Math.max(1, Math.round(rect.width * ratio));
+      const height = Math.max(1, Math.round(visibleHeight * ratio));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width; canvas.height = height;
+      }
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      return { ctx, width: rect.width, height: visibleHeight };
+    }
+
+    function addSoilRow(values = {}) {
+      const row = document.createElement('tr');
+      const cells = [
+        ['symbol', 'UCS / nombre', 'text'], ['texture', 'Textura', 'text'],
+        ['K', 'K (m/d)', 'number'], ['i', 'i', 'number'], ['Me', 'Me', 'number'],
+        ['rho', 'ρb (kg/m³)', 'number'], ['znso', 'Znso (m)', 'number']
+      ];
+      for (const [key, label, type] of cells) {
+        const td = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = type; input.dataset.key = key; input.setAttribute('aria-label', label);
+        if (type === 'number') { input.min = '0'; input.step = 'any'; }
+        input.value = values[key] == null ? '' : String(values[key]);
+        td.appendChild(input); row.appendChild(td);
+      }
+      const remove = document.createElement('td');
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'button remove-row'; button.textContent = '×';
+      button.setAttribute('aria-label', 'Quitar perfil');
+      button.addEventListener('click', () => { row.remove(); refreshSoilSelect(); });
+      remove.appendChild(button); row.appendChild(remove);
+      $('soilRows').appendChild(row);
+      refreshSoilSelect();
+    }
+
+    function refreshSoilSelect() {
+      const select = $('soilView');
+      const old = Number(select.value || 0);
+      const profiles = readProfiles(false);
+      select.replaceChildren();
+      profiles.forEach((p, index) => {
+        const option = document.createElement('option');
+        option.value = String(index); option.textContent = p.symbol || `Perfil ${index + 1}`;
+        select.appendChild(option);
+      });
+      if (profiles.length) select.value = String(clamp(old, 0, profiles.length - 1));
+    }
+
+    function readProfiles(report = true) {
+      const profiles = Array.from($('soilRows').rows).map((row, index) => {
+        const values = Object.fromEntries(Array.from(row.querySelectorAll('input')).map((input) => [input.dataset.key, input.value.trim()]));
+        const empty = Object.values(values).every((value) => value === '');
+        if (empty) return null;
+        const p = {
+          symbol: values.symbol || `Perfil ${index + 1}`, texture: values.texture,
+          K: Number(values.K), i: Number(values.i), Me: Number(values.Me),
+          rho: Number(values.rho), znso: Number(values.znso)
+        };
+        const invalid = !Number.isFinite(p.K) || p.K <= 0 || !Number.isFinite(p.i) || p.i < 0 ||
+          !Number.isFinite(p.Me) || p.Me <= 0 || p.Me >= 1 || !Number.isFinite(p.rho) || p.rho <= 0 ||
+          !Number.isFinite(p.znso) || p.znso <= 0;
+        if (invalid && report) throw new Error(`${p.symbol}: completa K, i, Me, ρb y Znso con valores válidos.`);
+        return invalid ? null : p;
+      }).filter(Boolean);
+      if (report && !profiles.length) throw new Error('Agrega al menos un perfil de suelo con sus parámetros hidráulicos.');
+      return profiles;
+    }
+
+    function readConfig() {
+      const profiles = readProfiles();
+      const cfg = {
+        profiles, chemical: $('chemical').value.trim() || 'Sustancia digitada',
+        koc: num('koc'), foc: num('foc'), kdManual: num('kdManual'),
+        dm: num('dm'), exponent: num('diffExponent'), alphaL: num('alphaL'), alphaT: num('alphaT'),
+        halfLife: num('halfLife'), threshold: num('detectThreshold'), mode: $('sourceMode').value,
+        c0: num('sourceC0'), mass: num('sourceMass'), close: num('sourceClose'),
+        sx0: num('sourceX0'), sx1: num('sourceX1'), sy0: num('sourceY0'), sy1: num('sourceY1'),
+        sz0: num('sourceZ0'), sz1: num('sourceZ1'),
+        L: num('domainX'), W: num('domainY'), Z: num('domainZ'),
+        nx: Math.floor(num('nx')), ny: Math.floor(num('ny')), nz: Math.floor(num('nz')),
+        days: num('simulationDays'), spacing: num('sectionSpacing'),
+        custom: $('customSections').value.trim(), azimuth: num('azimuth'), origin: $('origin').value.trim(),
+        rotation: num('rotation'), henry: num('henry')
+      };
+      for (const [key, label] of [['dm','DM'],['exponent','exponente c'],['alphaL','αL'],['alphaT','αT'],['threshold','umbral detectable'],['L','longitud X'],['W','ancho Y'],['Z','profundidad Z'],['nx','celdas X'],['ny','celdas Y'],['nz','celdas Z'],['days','duración'],['azimuth','rumbo del flujo']]) {
+        if (!Number.isFinite(cfg[key]) || (key !== 'azimuth' && cfg[key] <= 0)) throw new Error(`Ingresa un valor válido para ${label}.`);
+      }
+      if (cfg.mode !== 'continuous' && cfg.mode !== 'pulse') throw new Error('Selecciona si el vertimiento es continuo o momentáneo.');
+      if (cfg.mode === 'continuous' && (!Number.isFinite(cfg.c0) || cfg.c0 <= 0)) throw new Error('Para un vertimiento continuo, ingresa C₀ mayor que cero.');
+      if (cfg.mode === 'pulse' && (!Number.isFinite(cfg.mass) || cfg.mass <= 0)) throw new Error('Para un vertimiento momentáneo, ingresa la masa aplicada.');
+      for (const [start, end, limit, axis] of [[cfg.sx0,cfg.sx1,cfg.L,'X'],[cfg.sy0,cfg.sy1,cfg.W,'Y'],[cfg.sz0,cfg.sz1,cfg.Z,'Z']]) {
+        if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end > limit || end <= start) {
+          throw new Error(`La caja fuente requiere límites válidos en el eje ${axis}, dentro del dominio.`);
+        }
+      }
+      if (!$('soilSource').value.trim()) throw new Error('Registra la cita o el origen de los datos de suelo antes de modelar.');
+      if (!$('chemicalSource').value.trim()) throw new Error('Registra la cita o el origen de los parámetros del contaminante antes de modelar.');
+      if (Number.isFinite(cfg.close) && cfg.close < 0) throw new Error('El día de cierre no puede ser negativo.');
+      if (![cfg.koc, cfg.kdManual].some((v) => Number.isFinite(v) && v >= 0)) throw new Error('Ingresa Koc o un Kd directo.');
+      if (Number.isFinite(cfg.koc) && (!Number.isFinite(cfg.foc) || cfg.foc < 0 || cfg.foc > 100) && !Number.isFinite(cfg.kdManual)) throw new Error('Para calcular Kd desde Koc, también hace falta foc entre 0 y 100 %.');
+      if (!Number.isFinite(cfg.dm) || cfg.dm < 0 || cfg.alphaL < 0 || cfg.alphaT < 0) throw new Error('Los coeficientes de difusión y dispersividad no pueden ser negativos.');
+      const cells = cfg.nx * cfg.ny * cfg.nz;
+      if (cfg.nx < 4 || cfg.ny < 4 || cfg.nz < 4 || cfg.nx > 120 || cfg.ny > 60 || cfg.nz > 60 || cells > 24000) {
+        throw new Error('La malla debe tener al menos 4 celdas por eje y no superar 24 000 celdas.');
+      }
+      if (cfg.profiles.length > 6) throw new Error('Para mantener la corrida interactiva, modela hasta seis perfiles a la vez.');
+      cfg.sections = parseSections(cfg);
+      if (cfg.sections.some((distance) => distance <= cfg.sx1)) throw new Error('Las secciones de control deben quedar después de la caja fuente para que todas las curvas comiencen en cero.');
+      if (cfg.sections.length > 16) throw new Error('La corrida admite hasta 16 secciones de control.');
+      cfg.kd = Number.isFinite(cfg.kdManual) ? cfg.kdManual : cfg.koc * (cfg.foc / 100) / 1000;
+      cfg.lambda = Number.isFinite(cfg.halfLife) && cfg.halfLife > 0 ? Math.LN2 / cfg.halfLife : 0;
+      cfg.dx = cfg.L / cfg.nx; cfg.dy = cfg.W / cfg.ny; cfg.dz = cfg.Z / cfg.nz;
+      return cfg;
+    }
+
+    function parseSections(cfg) {
+      let values;
+      if (cfg.custom) {
+        values = cfg.custom.split(/[;,]/).map((part) => Number(part.trim()));
+        if (values.some((v) => !Number.isFinite(v) || v <= 0 || v > cfg.L)) throw new Error('Las secciones personalizadas deben estar entre cero y la longitud X.');
+      } else {
+        if (!Number.isFinite(cfg.spacing) || cfg.spacing <= 0) throw new Error('Ingresa la separación de los tramos.');
+        values = [];
+        for (let x = cfg.spacing; x < cfg.L; x += cfg.spacing) values.push(x);
+        if (!values.length || values[values.length - 1] !== cfg.L) values.push(cfg.L);
+      }
+      return [...new Set(values.map((v) => Math.round(v * 1000) / 1000))].sort((a, b) => a - b);
+    }
+
+    function cellMass(concentration, cfg, profile) {
+      return concentration * cfg.dx * cfg.dy * cfg.dz * profile.Me * 0.001;
+    }
+
+    function solveProfile(cfg, profile) {
+      const { nx, ny, nz, dx, dy, dz, days } = cfg;
+      const total = nx * ny * nz;
+      const index = (x, y, z) => (z * ny + y) * nx + x;
+      const kd = cfg.kd;
+      const retardation = 1 + ((profile.rho / profile.Me) * kd);
+      const darcyVelocity = profile.K * profile.i;
+      const velocity = darcyVelocity / profile.Me;
+      const dStar = cfg.dm * Math.pow(profile.Me, cfg.exponent);
+      const dLong = dStar + cfg.alphaL * velocity;
+      const dTrans = dStar + cfg.alphaT * velocity;
+      const stableRate = (velocity / (retardation * dx)) +
+        (2 * dLong / (retardation * dx * dx)) +
+        (2 * dTrans / (retardation * dy * dy)) +
+        (2 * dTrans / (retardation * dz * dz)) + cfg.lambda / retardation;
+      const stableDt = stableRate > 0 ? 0.45 / stableRate : days;
+      const slices = 64;
+      const cutDt = days / slices;
+      const substeps = Math.max(1, Math.ceil(cutDt / stableDt));
+      if (substeps * slices > 12000) throw new Error(`${profile.symbol}: la estabilidad exige más de 12 000 pasos. Reduce la resolución o el tiempo de corrida.`);
+      const dt = cutDt / substeps;
+      const frames = [new Float32Array(total)];
+      const massByCut = [0];
+      const closureByCut = [100];
+      let field = frames[0];
+      let next = new Float32Array(total);
+      const cellsInRange = (start,end,size,count) => {
+        const first=clamp(Math.floor(start/size),0,count-1);
+        const last=clamp(Math.ceil(end/size)-1,first,count-1);
+        return Array.from({length:last-first+1},(_,i)=>first+i);
+      };
+      const sourceXs = cellsInRange(cfg.sx0,cfg.sx1,dx,nx);
+      const sourceYs = cellsInRange(cfg.sy0,cfg.sy1,dy,ny);
+      const sourceZs = cellsInRange(cfg.sz0,cfg.sz1,dz,nz);
+      const sourceCells = [];
+      for (const z of sourceZs) for (const y of sourceYs) for (const x of sourceXs) sourceCells.push(index(x,y,z));
+      let inputMass = 0, outMass = 0, decayedMass = 0;
+      const sourceVolWater = sourceCells.length * dx * dy * dz * profile.Me;
+      const pulseC = cfg.mass * 1000 / sourceVolWater;
+      const imposedC = cfg.mode === 'continuous' ? cfg.c0 : pulseC;
+      if (cfg.mode === 'continuous') {
+        for (const p of sourceCells) field[p] = imposedC;
+        inputMass = sourceCells.reduce((sum, p) => sum + cellMass(field[p], cfg, profile), 0);
+      } else {
+        for (const p of sourceCells) field[p] = pulseC;
+        inputMass = sourceCells.reduce((sum, p) => sum + cellMass(field[p], cfg, profile), 0);
+      }
+      frames[0] = new Float32Array(field);
+      massByCut[0] = field.reduce((sum, c) => sum + cellMass(c, cfg, profile), 0);
+      closureByCut[0] = inputMass > 0 ? 100 * massByCut[0] / inputMass : 100;
+      let courantMax = 0, diffusionMax = 0;
+      for (let cut = 1; cut <= slices; cut++) {
+        for (let step = 0; step < substeps; step++) {
+          const day = ((cut - 1) * substeps + step + 1) * dt;
+          for (let z = 0; z < nz; z++) {
+            for (let y = 0; y < ny; y++) {
+              for (let x = 0; x < nx; x++) {
+                const p = index(x, y, z), c = field[p];
+                const xm = x ? field[p - 1] : c;
+                const xp = x + 1 < nx ? field[p + 1] : c;
+                const ym = y ? field[p - nx] : c;
+                const yp = y + 1 < ny ? field[p + nx] : c;
+                const zm = z ? field[p - nx * ny] : c;
+                const zp = z + 1 < nz ? field[p + nx * ny] : c;
+                const d2x = (xp - 2 * c + xm) / (dx * dx);
+                const d2y = (yp - 2 * c + ym) / (dy * dy);
+                const d2z = (zp - 2 * c + zm) / (dz * dz);
+                const adv = x ? (c - xm) / dx : c / dx;
+                const rate = (dLong * d2x + dTrans * (d2y + d2z) - velocity * adv - cfg.lambda * c) / retardation;
+                next[p] = Math.max(0, c + dt * rate);
+              }
+            }
+          }
+          [field, next] = [next, field];
+          const sourceActive = cfg.mode === 'continuous' && (!Number.isFinite(cfg.close) || day <= cfg.close);
+          if (sourceActive) {
+            for (const p of sourceCells) {
+              inputMass += Math.max(0, imposedC - field[p]) * dx * dy * dz * profile.Me * 0.001;
+              field[p] = imposedC;
+            }
+          }
+          const faceArea = dy * dz * profile.Me * 0.001;
+          for (let z = 0; z < nz; z++) for (let y = 0; y < ny; y++) {
+            outMass += Math.max(0, field[index(nx - 1, y, z)]) * velocity * faceArea * dt;
+          }
+          if (cfg.lambda > 0) {
+            let sum = 0;
+            for (let p = 0; p < total; p++) sum += field[p];
+            decayedMass += sum * dx * dy * dz * profile.Me * 0.001 * cfg.lambda / retardation * dt;
+          }
+          courantMax = Math.max(courantMax, velocity * dt / (retardation * dx));
+          diffusionMax = Math.max(diffusionMax, dLong * dt / (retardation * dx * dx), dTrans * dt / (retardation * dy * dy), dTrans * dt / (retardation * dz * dz));
+        }
+        frames.push(new Float32Array(field));
+        const cutMass = field.reduce((sum, c) => sum + cellMass(c, cfg, profile), 0);
+        massByCut.push(cutMass);
+        closureByCut.push(inputMass > 0 ? 100 * (cutMass + outMass + decayedMass) / inputMass : 100);
+      }
+      const timeline = Array.from({ length: slices + 1 }, (_, i) => i * cutDt);
+      const series = cfg.sections.map((distance) => {
+        const x = clamp(Math.round(distance / dx), 0, nx - 1);
+        const y = clamp(Math.round(((cfg.sy0 + cfg.sy1) / 2) / dy), 0, ny - 1);
+        const z = clamp(Math.round(((cfg.sz0 + cfg.sz1) / 2) / dz), 0, nz - 1);
+        return { distance, values: frames.map((snapshot, cut) => ({ day: timeline[cut], value: snapshot[index(x, y, z)] })) };
+      });
+      let cmax = 0;
+      for (const snapshot of frames) for (let p = 0; p < snapshot.length; p++) cmax = Math.max(cmax, snapshot[p]);
+      const stored = frames.at(-1).reduce((sum, c) => sum + cellMass(c, cfg, profile), 0);
+      const closure = inputMass > 0 ? 100 * (stored + outMass + decayedMass) / inputMass : 100;
+      return {
+        profile, frames, timeline, series, cmax, inputMass, outMass, decayedMass, stored, closure,
+        massByCut, closureByCut,
+        retardation, darcyVelocity, velocity, dStar, dLong, dTrans, stableDt: dt,
+        courantMax, diffusionMax, index
+      };
+    }
+
+    function solve() {
+      stopPlayback();
+      $('formError').classList.remove('visible');
+      $('exampleNote').classList.remove('visible');
+      let cfg;
+      try { cfg = readConfig(); }
+      catch (error) { $('formError').textContent = error.message; $('formError').classList.add('visible'); return; }
+      $('runStatus').textContent = 'Resolviendo volúmenes finitos…';
+      $('results').classList.remove('visible');
+      $('runSimulation').disabled = true;
+      $('runSimulation').textContent = 'Calculando…';
+      requestAnimationFrame(() => {
+        try {
+          const runs = cfg.profiles.map((profile) => solveProfile(cfg, profile));
+          app.runs = runs; app.cfg = cfg; app.currentSoil = 0; app.currentCut = 0; app.lastPlotCut = -1;
+          app.example = false; app.geometryDirty = true; app.lastPaintCut = -1; app.lastPaintSoil = -1;
+          $('results').classList.add('visible');
+          $('runStatus').textContent = `${runs.length} perfil${runs.length === 1 ? '' : 'es'} · ${cfg.nx} × ${cfg.ny} × ${cfg.nz} celdas · ${runs[0].timeline.length} cortes`;
+          $('timeSlider').max = String(runs[0].timeline.length - 1);
+          $('timeSlider').value = '0';
+          refreshSoilSelect();
+          renderPlots(); renderMilestones(); renderDistance();
+          updateFrame();
+          $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (error) {
+          $('formError').textContent = error.message;
+          $('formError').classList.add('visible');
+          $('runStatus').textContent = 'Corrida no completada';
+        } finally {
+          $('runSimulation').disabled = false;
+          $('runSimulation').textContent = '▶ INICIAR SIMULACIÓN';
+        }
+      });
+    }
+
+    function currentRun() { return app.runs[app.currentSoil] || null; }
+    function currentSnapshot(run = currentRun()) { return run ? run.frames[app.currentCut] : null; }
+    function frontStats(run, snapshot, cfg) {
+      let front = 0, volume = 0, maxC = 0, overMass = 0;
+      for (let z = 0; z < cfg.nz; z++) for (let y = 0; y < cfg.ny; y++) for (let x = 0; x < cfg.nx; x++) {
+        const c = snapshot[run.index(x, y, z)];
+        maxC = Math.max(maxC, c);
+        if (c >= cfg.threshold) {
+          front = Math.max(front, (x + 1) * cfg.dx);
+          volume += cfg.dx * cfg.dy * cfg.dz;
+          overMass += cellMass(c, cfg, run.profile);
+        }
+      }
+      return { front, volume, maxC, overMass };
+    }
+
+    function updateFrame() {
+      const run = currentRun();
+      if (!run || !app.cfg) return;
+      app.currentCut = clamp(app.currentCut, 0, run.frames.length - 1);
+      const cfg = app.cfg, day = run.timeline[app.currentCut], snapshot = currentSnapshot(run);
+      const stats = frontStats(run, snapshot, cfg);
+      $('hudDay').textContent = `${fmt(day, 1)} d`;
+      $('hudFront').textContent = `${fmt(stats.front, 2)} m`;
+      $('hudCmax').textContent = `${fmt(stats.maxC, 3)} mg/L`;
+      $('hudVolume').textContent = `${fmt(stats.volume, 2)} m³`;
+      $('hudMass').textContent = `${fmt(stats.overMass, 4)} kg`;
+      $('hudClosure').textContent = `${fmt(run.closureByCut[app.currentCut], 2)} %`;
+      $('dayReadout').textContent = `Día ${fmt(day, 1)} · ${run.profile.symbol}`;
+      $('sectionDay').textContent = `Día ${fmt(day, 1)} · ${run.profile.symbol}`;
+      $('timeSlider').value = String(app.currentCut);
+      $('plumeReadout').textContent = `${stats.front > 0 ? `Frente detectado a ${fmt(stats.front, 2)} m` : 'Sin concentración sobre el umbral detectable'} · ${fmt(stats.maxC, 3)} mg/L máximo · clic y arrastre para orbitar`;
+      if (app.lastPaintCut !== app.currentCut || app.lastPaintSoil !== app.currentSoil || app.geometryDirty) {
+        drawPlume(run, snapshot, cfg);
+        drawSection(run, snapshot, cfg);
+        app.lastPaintCut = app.currentCut;
+        app.lastPaintSoil = app.currentSoil;
+        app.geometryDirty = false;
+      }
+      if (app.lastPlotCut !== app.currentCut) {
+        drawArrivalPlots();
+        app.lastPlotCut = app.currentCut;
+      }
+    }
+
+    function thresholdTimes(values, threshold) {
+      const maximum = values.reduce((m, item) => Math.max(m, item.value), 0);
+      const limits = [threshold, maximum * .25, maximum * .5, maximum * .75, maximum];
+      return limits.map((limit, n) => {
+        if (!(maximum > 0) || (n === 0 && maximum < threshold)) return NaN;
+        for (let i = 1; i < values.length; i++) {
+          const prev = values[i - 1], next = values[i];
+          const reached = n === 4 ? next.value >= limit && next.value === maximum : next.value >= limit;
+          if (reached) {
+            if (next.value === prev.value) return next.day;
+            const fraction = clamp((limit - prev.value) / (next.value - prev.value), 0, 1);
+            return prev.day + (next.day - prev.day) * fraction;
+          }
+        }
+        return NaN;
+      });
+    }
+
+    function renderPlots() {
+      const grid = $('plotsGrid'); grid.replaceChildren();
+      const cfg = app.cfg;
+      cfg.sections.forEach((distance, sectionIndex) => {
+        const panel = document.createElement('section'); panel.className = 'chart-panel';
+        const header = document.createElement('div'); header.className = 'panel-head';
+        const title = document.createElement('h3'); title.textContent = `MW-${String(sectionIndex + 1).padStart(2, '0')} · ${fmt(distance, 2)} m`;
+        const mode = document.createElement('span');
+        mode.textContent = cfg.mode === 'continuous' ? 'Continua · mg/L' : 'Momentáneo · mg/L';
+        header.append(title, mode);
+        const canvas = document.createElement('canvas'); canvas.className = 'plot-canvas'; canvas.dataset.section = String(sectionIndex);
+        panel.append(header, canvas); grid.append(panel);
+      });
+      drawArrivalPlots();
+    }
+
+    function drawArrivalPlots() {
+      const cfg = app.cfg;
+      const maxObserved = Math.max(0, ...app.runs.flatMap((run) => run.series.flatMap((series) => series.values.map((point) => point.value))));
+      const fallbackScale = cfg.mode === 'continuous' ? cfg.c0 : cfg.threshold;
+      const maxY = niceAxisMaximum(maxObserved || fallbackScale);
+      Array.from($('plotsGrid').querySelectorAll('canvas')).forEach((canvas) => {
+        const section = Number(canvas.dataset.section), { ctx, width, height } = canvasContext(canvas, 275);
+        drawAxes(ctx, width, height, 'Día simulado (d)', 'Concentración (mg/L)');
+        const chart = plotBounds(width, height);
+        const data = app.runs.map((run) => run.series[section]);
+        const visibleCut = Math.min(app.currentCut, data[0].values.length - 1);
+        const visibleDay = data[0].values[visibleCut].day;
+        const maxX = cfg.days;
+        drawTicks(ctx, chart, maxX, maxY, formatConcentrationTick);
+        const cursorX = chart.x + (visibleDay / maxX) * chart.w;
+        ctx.save();
+        ctx.strokeStyle = '#e1ad5c88'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(cursorX, chart.y); ctx.lineTo(cursorX, chart.y + chart.h); ctx.stroke();
+        ctx.restore();
+        data.forEach((series, runIndex) => {
+          const color = CURVE_COLORS[runIndex % CURVE_COLORS.length];
+          const visibleValues = series.values.slice(0, visibleCut + 1);
+          ctx.beginPath();
+          visibleValues.forEach((pt, i) => {
+            const x = chart.x + (pt.day / maxX) * chart.w;
+            const y = chart.y + chart.h - (pt.value / maxY) * chart.h;
+            if (!i) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          });
+          ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.stroke();
+          const endpoint = visibleValues[visibleValues.length - 1];
+          const endpointX = chart.x + (endpoint.day / maxX) * chart.w;
+          const endpointY = chart.y + chart.h - (endpoint.value / maxY) * chart.h;
+          ctx.beginPath(); ctx.arc(endpointX, endpointY, 2.5, 0, Math.PI * 2);
+          ctx.fillStyle = color; ctx.fill();
+          const hitos = thresholdTimes(series.values, cfg.threshold);
+          const labels = ['D', '25%', '50%', '75%', 'Pico'];
+          hitos.forEach((day, markerIndex) => {
+            if (!Number.isFinite(day) || day > visibleDay) return;
+            const value = seriesValueAt(series.values, day);
+            const x = chart.x + (day / maxX) * chart.w, y = chart.y + chart.h - (value / maxY) * chart.h;
+            ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = markerIndex === 0 ? '#efe8d8' : color; ctx.fill();
+            ctx.strokeStyle = '#171816'; ctx.lineWidth = 1; ctx.stroke();
+            if (markerIndex === 0 || markerIndex === 4) {
+              ctx.fillStyle = '#d5cec0'; ctx.font = '10px Segoe UI';
+              ctx.fillText(labels[markerIndex], x + 5, y - 5 - runIndex * 10);
+            }
+          });
+          drawLegendItem(ctx, chart.x + 4 + runIndex * 118, 15, color, app.runs[runIndex].profile.symbol);
+        });
+      });
+    }
+
+    function drawAxes(ctx, width, height, xTitle, yTitle) {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#1b1d19'; ctx.fillRect(0, 0, width, height);
+      const b = plotBounds(width, height);
+      ctx.strokeStyle = '#4a4c44'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(b.x, b.y + b.h); ctx.lineTo(b.x + b.w, b.y + b.h); ctx.stroke();
+      ctx.save(); ctx.fillStyle = '#aaa596'; ctx.font = '10px Segoe UI';
+      ctx.textAlign = 'center'; ctx.fillText(xTitle, b.x + b.w / 2, height - 8);
+      ctx.translate(13, b.y + b.h / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(yTitle, 0, 0); ctx.restore();
+    }
+    function plotBounds(width, height) { return { x: 52, y: 29, w: Math.max(40, width - 69), h: height - 67 }; }
+    function niceAxisMaximum(value) {
+      if (!(value > 0) || !Number.isFinite(value)) return 1;
+      const magnitude = 10 ** Math.floor(Math.log10(value));
+      const normalized = value / magnitude;
+      const multiplier = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
+      return multiplier * magnitude;
+    }
+    function formatConcentrationTick(value) {
+      if (value === 0) return '0';
+      if (Math.abs(value) < 0.001 || Math.abs(value) >= 100000) {
+        return value.toExponential(1).replace('.', ',').replace('e-', '×10⁻').replace('e+', '×10⁺').replace('e', '×10^');
+      }
+      return Number(value.toPrecision(3)).toLocaleString('es-CO', { maximumSignificantDigits: 3, useGrouping: false });
+    }
+    function seriesValueAt(values, day) {
+      if (day <= values[0].day) return values[0].value;
+      for (let i = 1; i < values.length; i++) {
+        if (values[i].day >= day) {
+          const previous = values[i - 1], next = values[i];
+          const fraction = (day - previous.day) / (next.day - previous.day);
+          return previous.value + (next.value - previous.value) * fraction;
+        }
+      }
+      return values[values.length - 1].value;
+    }
+    function drawTicks(ctx, b, maxX, maxY, formatY = (value) => fmt(value, value < 1 ? 3 : 1)) {
+      ctx.save(); ctx.font = '10px Segoe UI'; ctx.fillStyle = '#9e998d'; ctx.strokeStyle = '#ffffff12'; ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = b.y + b.h * i / 4, value = maxY * (1 - i / 4);
+        ctx.beginPath(); ctx.moveTo(b.x, y); ctx.lineTo(b.x + b.w, y); ctx.stroke();
+        ctx.textAlign = 'right'; ctx.fillText(formatY(value), b.x - 6, y + 3);
+        const x = b.x + b.w * i / 4;
+        ctx.beginPath(); ctx.moveTo(x, b.y + b.h); ctx.lineTo(x, b.y + b.h + 3); ctx.stroke();
+        ctx.textAlign = 'center'; ctx.fillText(fmt(maxX * i / 4, 0), x, b.y + b.h + 15);
+      }
+      ctx.restore();
+    }
+    function drawLegendItem(ctx, x, y, color, text) {
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 18, y); ctx.stroke();
+      ctx.fillStyle = '#ddd6c8'; ctx.font = '10px Segoe UI'; ctx.textAlign = 'left'; ctx.fillText(text, x + 24, y + 3);
+    }
+
+    function renderMilestones() {
+      const body = $('milestoneRows'); body.replaceChildren();
+      const cfg = app.cfg;
+      app.runs.forEach((run) => run.series.forEach((series, sectionIndex) => {
+        const row = document.createElement('tr');
+        const values = [run.profile.symbol, `${String(sectionIndex + 1).padStart(2,'0')} · ${fmt(series.distance, 2)} m`, ...thresholdTimes(series.values, cfg.threshold).map(fmtDay)];
+        values.forEach((value, index) => { const cell = document.createElement('td'); cell.textContent = value; row.appendChild(cell); });
+        body.appendChild(row);
+      }));
+      const run = app.runs[0];
+      $('methodNote').textContent =
+        `Método: volúmenes finitos explícitos en malla uniforme; upwind para advección y condición de estabilidad ≤ 0,45 por paso. ` +
+        `Kd = ${fmt(cfg.kd, 6)} m³/kg; λ = ${fmt(cfg.lambda, 6)} d⁻¹; la corrida ${cfg.mode === 'continuous' ? 'mantiene C₀ en la caja hasta su cierre' : 'inyecta la masa declarada al inicio'}. ` +
+        `Perfil ${run.profile.symbol}: R = ${fmt(run.retardation, 4)}, v = ${fmt(run.velocity, 6)} m/d, ` +
+        `D* = ${fmt(run.dStar, 7)}, DL = ${fmt(run.dLong, 7)}, DT = ${fmt(run.dTrans, 7)} m²/d. ` +
+        `Paso estable usado: ${fmt(run.stableDt, 6)} d; Courant máximo ${fmt(run.courantMax, 4)} y difusión máxima ${fmt(run.diffusionMax, 4)}. ` +
+        `La fuente de cada parámetro es la cita ingresada por el usuario; EDMUNDS no incorpora aquí los archivos locales del catálogo IGAC o del Excel RSL.`;
+    }
+
+    function renderDistance() {
+      updateDistanceForProfile();
+    }
+
+    function drawSection(run, field, cfg) {
+      const canvas = $('section2d'), { ctx, width, height } = canvasContext(canvas, 220);
+      ctx.clearRect(0, 0, width, height); ctx.fillStyle = '#141612'; ctx.fillRect(0,0,width,height);
+      const left = 38, top = 12, plotW = width - 53, plotH = height - 35;
+      let max = 0;
+      for (let z = 0; z < cfg.nz; z++) for (let x = 0; x < cfg.nx; x++) max = Math.max(max, field[run.index(x,Math.floor(cfg.ny/2),z)]);
+      const scale = document.createElement('canvas'); scale.width = cfg.nx; scale.height = cfg.nz;
+      const sctx = scale.getContext('2d'), image = sctx.createImageData(cfg.nx,cfg.nz);
+      for (let z = 0; z < cfg.nz; z++) for (let x = 0; x < cfg.nx; x++) {
+        const c = field[run.index(x,Math.floor(cfg.ny/2),z)];
+        const value = max > 0 ? Math.log1p(9 * c / max) / Math.log(10) : 0;
+        const color = colorAt(value), p = (z * cfg.nx + x) * 4;
+        image.data[p] = color[0]; image.data[p+1] = color[1]; image.data[p+2] = color[2]; image.data[p+3] = c >= cfg.threshold ? 235 : 30;
+      }
+      sctx.putImageData(image,0,0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(scale,left,top,plotW,plotH);
+      ctx.strokeStyle = '#d7d2c8'; ctx.lineWidth = 1;
+      const thresholdRatio = max > 0 ? cfg.threshold / max : 1;
+      if (thresholdRatio < 1) {
+        ctx.globalAlpha = .75;
+        ctx.beginPath();
+        let hasPath = false;
+        for (let x = 0; x < cfg.nx; x++) {
+          let zDetect = -1;
+          for (let z = 0; z < cfg.nz; z++) if (field[run.index(x,Math.floor(cfg.ny/2),z)] >= cfg.threshold) zDetect = z;
+          if (zDetect >= 0) {
+            const px = left + x / cfg.nx * plotW, py = top + zDetect / cfg.nz * plotH;
+            if (!hasPath) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+            hasPath = true;
+          } else hasPath = false;
+        }
+        ctx.stroke(); ctx.globalAlpha = 1;
+      }
+      ctx.fillStyle = '#aaa596'; ctx.font = '10px Segoe UI'; ctx.fillText('0',left, height-8);
+      ctx.textAlign = 'right'; ctx.fillText(`${fmt(cfg.L,0)} m`,left+plotW,height-8); ctx.textAlign = 'left';
+      ctx.save(); ctx.translate(12,top+plotH/2); ctx.rotate(-Math.PI/2); ctx.fillText('Profundidad (m)',0,0); ctx.restore();
+    }
+
+    function projectPoint(point, cfg, width, height) {
+      const cy = Math.cos(app.yaw), sy = Math.sin(app.yaw), cp = Math.cos(app.pitch), sp = Math.sin(app.pitch);
+      const x = point[0] - cfg.L/2, y = point[1] - cfg.W/2, z = -point[2] + cfg.Z/2;
+      const rx = x*cy - y*sy, ry = x*sy + y*cy;
+      const scale = Math.min((width-80)/(cfg.L+cfg.W), (height-70)/(cfg.Z + (cfg.L+cfg.W)*.45)) * app.zoom;
+      return { x: width/2 + rx*scale, y: height/2 + (ry*sp - z*cp)*scale + 15, depth: ry*cp + z*sp };
+    }
+
+    function extractSmoothSurface(run, field, cfg, iso) {
+      const rows = [];
+      for (let x = 0; x < cfg.nx; x++) {
+        let localPeak = 0, weightSum = 0, meanY = 0, meanZ = 0;
+        for (let z = 0; z < cfg.nz; z++) for (let y = 0; y < cfg.ny; y++) {
+          const value = field[run.index(x,y,z)];
+          localPeak = Math.max(localPeak,value);
+          const weight = Math.max(0,value-iso);
+          weightSum += weight;
+          meanY += (y+.5)*cfg.dy*weight;
+          meanZ += (z+.5)*cfg.dz*weight;
+        }
+        if (localPeak < iso || weightSum <= 0) { rows.push(null); continue; }
+        meanY /= weightSum; meanZ /= weightSum;
+        let varianceY = 0, varianceZ = 0;
+        for (let z = 0; z < cfg.nz; z++) for (let y = 0; y < cfg.ny; y++) {
+          const weight = Math.max(0,field[run.index(x,y,z)]-iso);
+          varianceY += (((y+.5)*cfg.dy-meanY)**2)*weight;
+          varianceZ += (((z+.5)*cfg.dz-meanZ)**2)*weight;
+        }
+        varianceY /= weightSum; varianceZ /= weightSum;
+        const spread = Math.sqrt(Math.max(0,2*Math.log(localPeak/iso)));
+        rows.push({
+          x:(x+.5)*cfg.dx, y:meanY, z:meanZ,
+          ry:clamp(Math.sqrt(varianceY)*spread*1.55,cfg.dy*.48,cfg.W*.49),
+          rz:clamp(Math.sqrt(varianceZ)*spread*1.55,cfg.dz*.48,cfg.Z*.49)
+        });
+      }
+      const active = rows.map((row,index)=>row?index:-1).filter(index=>index>=0);
+      if (active.length < 2) return [];
+      const start=active[0], end=active[active.length-1], surface=[];
+      const angles=48;
+      const makeRing=(row)=>{
+        const ring=[];
+        for(let a=0;a<angles;a++){
+          const angle=(a/angles)*Math.PI*2;
+          ring.push([
+            row.x,
+            clamp(row.y+Math.cos(angle)*row.ry,0,cfg.W),
+            clamp(row.z+Math.sin(angle)*row.rz,0,cfg.Z)
+          ]);
+        }
+        return ring;
+      };
+      let previous=makeRing(rows[start]), firstRing=previous, lastRing=previous;
+      for(let x=start;x<end;x++){
+        const a=rows[x]||rows[Math.max(start,x-1)], b=rows[x+1]||rows[Math.min(end,x+2)];
+        if(!a||!b)continue;
+        for(let sub=1;sub<=2;sub++){
+          const t=sub/2, next={};
+          for(const key of ['x','y','z','ry','rz'])next[key]=a[key]+(b[key]-a[key])*t;
+          const ring=makeRing(next);
+          for(let angle=0;angle<angles;angle++){
+            const n=(angle+1)%angles;
+            surface.push([previous[angle],ring[angle],ring[n]],[previous[angle],ring[n],previous[n]]);
+          }
+          previous=ring;lastRing=ring;
+        }
+      }
+      if(lastRing){
+        const cap=(ring,rowIndex)=>{
+          const row=rows[rowIndex]||rows[start];
+          const center=[row.x,row.y,row.z];
+          for(let i=0;i<angles;i++)surface.push([center,ring[i],ring[(i+1)%angles]]);
+        };
+        cap(firstRing,start);cap(lastRing,end);
+      }
+      return surface;
+    }
+
+    function drawPlume(run, field, cfg) {
+      const canvas = $('plume3d'), { ctx, width, height } = canvasContext(canvas, 430);
+      ctx.clearRect(0,0,width,height);
+      const bg = ctx.createLinearGradient(0,0,0,height); bg.addColorStop(0,'#1b1e19'); bg.addColorStop(1,'#11130f');
+      ctx.fillStyle=bg; ctx.fillRect(0,0,width,height);
+      const project = (p) => projectPoint(p,cfg,width,height);
+      const corners = [[0,0,0],[cfg.L,0,0],[cfg.L,cfg.W,0],[0,cfg.W,0],[0,0,cfg.Z],[cfg.L,0,cfg.Z],[cfg.L,cfg.W,cfg.Z],[0,cfg.W,cfg.Z]];
+      const edges = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+      ctx.strokeStyle='#717467'; ctx.lineWidth=1;
+      for (const [a,b] of edges) { const p=project(corners[a]), q=project(corners[b]); ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke(); }
+      ctx.strokeStyle='#ffffff14'; ctx.lineWidth=.7;
+      for (let i=1;i<4;i++) {
+        const x=cfg.L*i/4;
+        const p=project([x,0,0]),q=project([x,cfg.W,0]);ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke();
+      }
+      let max=0; for(let i=0;i<field.length;i++) max=Math.max(max,field[i]);
+      if (!(max > 0)) {
+        ctx.fillStyle='#b7b09f';ctx.font='13px Segoe UI';ctx.textAlign='center';
+        ctx.fillText('No hay concentración en este corte temporal.',width/2,height/2);
+      } else {
+        const levels=[Math.max(cfg.threshold,max*.035),Math.max(cfg.threshold,max*.18),Math.max(cfg.threshold,max*.48),Math.max(cfg.threshold,max*.78)];
+        const unique=[...new Set(levels.filter(v=>v<=max))];
+        const triangles=[];
+        unique.forEach((iso,levelIndex)=>{
+          const mesh=extractSmoothSurface(run,field,cfg,iso);
+          for(const tri of mesh) {
+            const p=tri.map(project);
+            const depth=(p[0].depth+p[1].depth+p[2].depth)/3;
+            const e1=[p[1].x-p[0].x,p[1].y-p[0].y],e2=[p[2].x-p[0].x,p[2].y-p[0].y];
+            const light=clamp(.78+((e1[0]*e2[1]-e1[1]*e2[0])>0?.15:-.1),.55,.98);
+            const color=colorAt(Math.log1p(9*iso/max)/Math.LN10);
+            triangles.push({p,depth,color,alpha:.24+levelIndex*.08,light});
+          }
+        });
+        triangles.sort((a,b)=>b.depth-a.depth);
+        for(const tri of triangles) {
+          const [a,b,c]=tri.p, color=tri.color.map(v=>Math.round(v*tri.light));
+          ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.closePath();
+          ctx.fillStyle=`rgba(${color[0]},${color[1]},${color[2]},${tri.alpha})`;ctx.fill();
+        }
+      }
+      const sourceCorners = [
+        [cfg.sx0,cfg.sy0,cfg.sz0],[cfg.sx1,cfg.sy0,cfg.sz0],
+        [cfg.sx1,cfg.sy1,cfg.sz0],[cfg.sx0,cfg.sy1,cfg.sz0],
+        [cfg.sx0,cfg.sy0,cfg.sz1],[cfg.sx1,cfg.sy0,cfg.sz1],
+        [cfg.sx1,cfg.sy1,cfg.sz1],[cfg.sx0,cfg.sy1,cfg.sz1]
+      ];
+      ctx.beginPath();
+      sourceCorners.slice(0,4).forEach((point,i)=>{const p=project(point);if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);});
+      ctx.closePath();ctx.fillStyle='rgba(225,173,92,.2)';ctx.fill();ctx.strokeStyle='#e1ad5c';ctx.lineWidth=1;ctx.stroke();
+      const source=project([(cfg.sx0+cfg.sx1)/2,(cfg.sy0+cfg.sy1)/2,(cfg.sz0+cfg.sz1)/2]);
+      ctx.beginPath();ctx.arc(source.x,source.y,3,0,Math.PI*2);ctx.fillStyle='#f1c777';ctx.fill();
+      ctx.fillStyle='#d0c9bb';ctx.font='11px Segoe UI';ctx.textAlign='left';
+      const label=project([cfg.L,cfg.W/2,0]);ctx.fillText('X · flujo',label.x+5,label.y);
+      const lateral=project([cfg.L/2,cfg.W,0]);ctx.fillText('Y',lateral.x+4,lateral.y);
+      const depth=project([0,0,cfg.Z]);ctx.fillText('Z · profundidad',depth.x+5,depth.y);
+    }
+
+    function updateDistanceForProfile() {
+      if (!app.runs.length) return;
+      const canvas=$('distanceChart'),{ctx,width,height}=canvasContext(canvas,300);
+      drawAxes(ctx,width,height,'Distancia (m)','Concentración (mg/L)');
+      const b=plotBounds(width,height),run=currentRun(),cfg=app.cfg;
+      const milestones=thresholdTimes(run.series.at(-1).values,cfg.threshold);
+      const cuts=milestones.map((day)=>Number.isFinite(day)
+        ? run.timeline.reduce((best,value,index)=>Math.abs(value-day)<Math.abs(run.timeline[best]-day)?index:best,0)
+        : -1);
+      const labels=['Det.','25 %','50 %','75 %','100 %'];
+      const maxVal=Math.max(.000001,run.cmax)*1.08;
+      cuts.forEach((cut,i)=>{
+        if(cut<0)return;
+        const color=CURVE_COLORS[i%CURVE_COLORS.length];ctx.beginPath();
+        for(let x=0;x<cfg.nx;x++){
+          const distance=x*cfg.dx,y=Math.floor(cfg.ny/2),z=Math.floor(cfg.nz*.45);
+          let c=0;for(let yy=Math.max(0,y-1);yy<=Math.min(cfg.ny-1,y+1);yy++)for(let zz=Math.max(0,z-1);zz<=Math.min(cfg.nz-1,z+1);zz++)c=Math.max(c,run.frames[cut][run.index(x,yy,zz)]);
+          const px=b.x+distance/cfg.L*b.w,py=b.y+b.h-c/maxVal*b.h;
+          if(x===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+        }
+        ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.stroke();
+        drawLegendItem(ctx,b.x+5+i*Math.max(78,Math.min(110,b.w/5)),15,color,`${labels[i]} ${fmt(run.timeline[cut],0)}d`);
+      });
+      drawTicks(ctx,b,cfg.L,maxVal);
+    }
+
+    function startPlayback() {
+      if (!app.runs.length) return;
+      if (app.currentCut >= app.runs[0].frames.length-1) app.currentCut=0;
+      app.playProgress=app.currentCut;
+      app.playing=true;app.lastFrame=0;$('playPause').textContent='Ⅱ Pausar';
+      app.raf=requestAnimationFrame(playFrame);
+    }
+    function stopPlayback() {
+      app.playing=false;cancelAnimationFrame(app.raf);
+      if($('playPause'))$('playPause').textContent='▶ Reproducir';
+    }
+    function playFrame(timestamp) {
+      if(!app.playing)return;
+      if(!app.lastFrame)app.lastFrame=timestamp;
+      const elapsed=timestamp-app.lastFrame;app.lastFrame=timestamp;
+      const steps=(elapsed/6400)*64*Number($('playSpeed').value);
+      app.playProgress=(app.playProgress||app.currentCut)+steps;
+      app.currentCut=Math.floor(app.playProgress);
+      if(app.currentCut>=app.runs[0].frames.length-1){app.currentCut=app.runs[0].frames.length-1;stopPlayback();}
+      updateFrame();app.raf=requestAnimationFrame(playFrame);
+    }
+
+    function makeExample() {
+      $('soilRows').replaceChildren();
+      addSoilRow({symbol:'DEM-01 · arena franca',texture:'Arena franca',K:8,i:.012,Me:.15,rho:1420,znso:3});
+      addSoilRow({symbol:'DEM-02 · arcillo limoso',texture:'Arcillo limoso',K:3,i:.018,Me:.22,rho:1550,znso:2.5});
+      const example={
+        chemical:'Atrazina · ejemplo sintético',cas:'1912-24-9',family:'Plaguicida',
+        koc:'100',foc:'1.5',kdManual:'',henry:'0.0001',dm:'0.0009',diffExponent:'1.3',
+        alphaL:'.45',alphaT:'.12',halfLife:'29',detectThreshold:'.001',chemicalSource:'Datos sintéticos de demostración; no cotejados con un archivo de referencia',
+        sourceMode:'pulse',sourceX0:'0',sourceX1:'1',sourceY0:'4.5',sourceY1:'5.5',sourceZ0:'0',sourceZ1:'.25',sourceC0:'35',sourceMass:'.08',sourceClose:'',
+        domainX:'12',domainY:'10',domainZ:'3',nx:'40',ny:'20',nz:'12',
+        simulationDays:'500',sectionSpacing:'3',customSections:'',azimuth:'18',origin:'',rotation:''
+      };
+      for(const [id,value] of Object.entries(example))$(id).value=value;
+      $('soilSource').value='Perfiles sintéticos de demostración; no cotejados con el catálogo IGAC';
+      $('exampleNote').innerHTML='<strong>Ejemplo demostrativo: no es tu predio.</strong> Las dos filas de suelo, los parámetros de transporte, la malla y el umbral son cifras sintéticas puestas por el portal para demostrar la animación; no son datos IGAC, EPA ni de laboratorio. Esta copia no incluye los catálogos ni los archivos de fuentes descargados. La etiqueta de atrazina sirve solo para identificar el caso de muestra; confirma cada valor con sus documentos antes de usar resultados. Pulsa «Vaciar todo» para empezar tu caso.';
+      $('exampleNote').classList.add('visible');
+      app.example=true;
+      solve();
+    }
+
+    function clearAll() {
+      stopPlayback();app.runs=[];app.cfg=null;app.currentCut=0;app.currentSoil=0;app.playProgress=0;
+      for(const id of formIds)$(id).value='';
+      $('soilRows').replaceChildren();addSoilRow();
+      $('sourceMode').value='';$('results').classList.remove('visible');
+      $('exampleNote').classList.remove('visible');$('formError').classList.remove('visible');
+      $('runStatus').textContent='';$('runSimulation').disabled=false;$('runSimulation').textContent='▶ INICIAR SIMULACIÓN';
+      refreshSoilSelect();
+    }
+
+    function exportGridCsv() {
+      const run=currentRun();if(!run)return;
+      const cfg=app.cfg,field=currentSnapshot(run),rows=['X_m,Y_m,Z_m,C_mg_L,perfil,dia'];
+      for(let z=0;z<cfg.nz;z++)for(let y=0;y<cfg.ny;y++)for(let x=0;x<cfg.nx;x++){
+        const c=field[run.index(x,y,z)];
+        if(c<cfg.threshold)continue;
+        rows.push(`${fmt(x*cfg.dx,4)},${fmt(y*cfg.dy,4)},${fmt(z*cfg.dz,4)},${fmt(c,8)},${JSON.stringify(run.profile.symbol)},${fmt(run.timeline[app.currentCut],4)}`);
+      }
+      const blob=new Blob([rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+      a.download=`EDMUNDS_${run.profile.symbol.replace(/[^a-z0-9_-]/gi,'_')}_dia_${fmt(run.timeline[app.currentCut],0)}.csv`;
+      a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    }
+
+    function attachOrbit() {
+      const canvas=$('plume3d');
+      canvas.addEventListener('pointerdown',(event)=>{
+        app.drag={x:event.clientX,y:event.clientY,yaw:app.yaw,pitch:app.pitch};canvas.classList.add('dragging');canvas.setPointerCapture(event.pointerId);
+      });
+      canvas.addEventListener('pointermove',(event)=>{
+        if(!app.drag)return;
+        app.yaw=app.drag.yaw+(event.clientX-app.drag.x)*.009;
+        app.pitch=clamp(app.drag.pitch+(event.clientY-app.drag.y)*.006,-.75,1.05);
+        app.geometryDirty=true;
+        if(currentRun())updateFrame();
+      });
+      const finish=()=>{app.drag=null;canvas.classList.remove('dragging');};
+      canvas.addEventListener('pointerup',finish);canvas.addEventListener('pointercancel',finish);
+      canvas.addEventListener('wheel',(event)=>{event.preventDefault();app.zoom=clamp(app.zoom*(event.deltaY<0?1.08:.92),.55,2.2);app.geometryDirty=true;if(currentRun())updateFrame();},{passive:false});
+    }
+
+    document.querySelectorAll('.step-heading').forEach((button)=>{
+      button.addEventListener('click',()=>{
+        const section=button.closest('.step'),closed=section.classList.toggle('closed');
+        button.setAttribute('aria-expanded',String(!closed));
+      });
+    });
+    $('addSoil').addEventListener('click',()=>addSoilRow());
+    $('runSimulation').addEventListener('click',solve);
+    $('loadExample').addEventListener('click',makeExample);
+    $('clearAll').addEventListener('click',clearAll);
+    $('playPause').addEventListener('click',()=>app.playing?stopPlayback():startPlayback());
+    $('timeSlider').addEventListener('input',(event)=>{stopPlayback();app.playProgress=Number(event.target.value);app.currentCut=Number(event.target.value);updateFrame();});
+    $('playSpeed').addEventListener('change',()=>{app.playProgress=app.currentCut;});
+    $('soilView').addEventListener('change',(event)=>{app.currentSoil=Number(event.target.value);renderMilestones();renderPlots();updateDistanceForProfile();updateFrame();});
+    $('exportCsv').addEventListener('click',exportGridCsv);
+    window.addEventListener('resize',()=>{if(currentRun()){drawArrivalPlots();renderDistance();app.geometryDirty=true;updateFrame();}});
+    attachOrbit();
+    const rampStops=CL_RAMPA.map(([position,color])=>`rgb(${color.join(',')}) ${position*100}%`).join(', ');
+    document.querySelectorAll('.legend-ramp').forEach((element)=>{element.style.background=`linear-gradient(90deg, ${rampStops})`;});
+    addSoilRow();
+  </script>
+</body>
+</html>
