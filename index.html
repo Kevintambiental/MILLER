@@ -1167,18 +1167,22 @@
         ? run.timeline.reduce((best,value,index)=>Math.abs(value-day)<Math.abs(run.timeline[best]-day)?index:best,0)
         : -1);
       const labels=['Det.','25 %','50 %','75 %','100 %'];
-      const maxVal=Math.max(.000001,run.cmax)*1.08;
-      cuts.forEach((cut,i)=>{
-        if(cut<0)return;
-        const color=CURVE_COLORS[i%CURVE_COLORS.length];ctx.beginPath();
-        for(let x=0;x<cfg.nx;x++){
+      const profiles=cuts.map((cut)=>cut<0?null:Array.from({length:cfg.nx},(_,x)=>{
           const distance=x*cfg.dx,y=Math.floor(cfg.ny/2),z=Math.floor(cfg.nz*.45);
           let c=0;for(let yy=Math.max(0,y-1);yy<=Math.min(cfg.ny-1,y+1);yy++)for(let zz=Math.max(0,z-1);zz<=Math.min(cfg.nz-1,z+1);zz++)c=Math.max(c,run.frames[cut][run.index(x,yy,zz)]);
-          const px=b.x+distance/cfg.L*b.w,py=b.y+b.h-c/maxVal*b.h;
+          return {distance,concentration:c};
+        }));
+      const maxProfileC=Math.max(0,...profiles.flatMap((profile)=>profile?profile.map((point)=>point.concentration):[]));
+      const maxVal=Math.max(.000001,maxProfileC)*1.08;
+      profiles.forEach((profile,i)=>{
+        if(!profile)return;
+        const color=CURVE_COLORS[i%CURVE_COLORS.length];ctx.beginPath();
+        profile.forEach(({distance,concentration},x)=>{
+          const px=b.x+distance/cfg.L*b.w,py=b.y+b.h-concentration/maxVal*b.h;
           if(x===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
-        }
+        });
         ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.stroke();
-        drawLegendItem(ctx,b.x+5+i*Math.max(78,Math.min(110,b.w/5)),15,color,`${labels[i]} ${fmt(run.timeline[cut],0)}d`);
+        drawLegendItem(ctx,b.x+5+i*Math.max(78,Math.min(110,b.w/5)),15,color,`${labels[i]} ${fmt(run.timeline[cuts[i]],0)}d`);
       });
       drawTicks(ctx,b,cfg.L,maxVal);
     }
