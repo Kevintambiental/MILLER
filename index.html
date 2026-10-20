@@ -187,7 +187,7 @@
       border-radius: 7px; background: #11130f; color: var(--text);
     }
     .day-readout { color: #e9d7b4; font-weight: 700; white-space: nowrap; }
-    .visual-layout { display: grid; grid-template-columns: minmax(0,1.7fr) minmax(280px,1fr); gap: 13px; }
+    .visual-layout { display: grid; grid-template-columns: 1fr; gap: 13px; }
     .view-panel, .chart-panel {
       min-width: 0; border: 1px solid var(--line); border-radius: 11px; background: #1b1d19;
     }
@@ -197,12 +197,11 @@
     }
     .panel-head h3 { margin: 0; font-size: 13px; letter-spacing: .035em; }
     .panel-head span { color: var(--muted); font-size: 11px; }
-    .render-canvas, .section-canvas, .plot-canvas, .distance-canvas {
+    .render-canvas, .plot-canvas, .distance-canvas {
       display: block; width: 100%; border-radius: 0 0 10px 10px;
     }
     .render-canvas { height: 430px; touch-action: none; cursor: grab; }
     .render-canvas.dragging { cursor: grabbing; }
-    .section-canvas { height: 220px; }
     .color-legend { display: flex; align-items: center; gap: 9px; padding: 8px 13px 12px; color: var(--muted); font-size: 10px; }
     .legend-ramp { height: 7px; flex: 1; border-radius: 9px; background: var(--surface-raised); }
     .view-footer { padding: 0 13px 11px; color: var(--muted); font-size: 11px; }
@@ -261,6 +260,32 @@
       .player { gap: 6px; }
       .hud-value { font-size: 16px; }
     }
+    :root {
+      --bg: #07121b; --surface: #0d1b25; --surface-raised: #142834;
+      --surface-deep: #050d13; --line: #29404a; --text: #e7f0ef;
+      --muted: #a6b9bb; --amber: #72e5f7; --focus: #a6f4ff;
+    }
+    body {
+      background:
+        radial-gradient(ellipse at 74% -10%, rgba(69,190,211,.12), transparent 38rem),
+        linear-gradient(150deg, #07121b 0%, #0b1821 52%, #071018 100%);
+    }
+    .step, .view-panel, .chart-panel { background: rgba(12,25,35,.96); border-color: #29404a; }
+    .hud-item, .player { background: #0c1b25; }
+    .field input, .field select, .unit-table input, .player select,
+    .catalog-results { border-color: #36525d; background: #07121b; }
+    .catalog-panel { border-color: #29404a; background: #09151d; }
+    .catalog-feedback { color: #b6c9cb; }
+    .brand-symbol { color: #051116; background: var(--amber); box-shadow: 0 8px 26px #45bed322; }
+    .button-primary { color: #061116; border-color: #9af2fb; background: #72e5f7; }
+    .button-primary:hover { background: #a0f1fb; }
+    .step-index { border-color: #4c8994; color: #72e5f7; }
+    .offline-tag { border-color: #467b80; color: #a7e7e5; }
+    .example-note { border-color: #527d83; background: #12303a; }
+    .form-error, .notice { border-color: #9b4e3d; background: #612c231c; }
+    .color-legend, .view-footer { color: #a6b9bb; }
+    .method-note, .section-note, .plot-intro { color: #a6b9bb; }
+    .button:hover { border-color: #5f929c; }
   </style>
 </head>
 <body>
@@ -448,16 +473,10 @@
       </div>
       <div class="visual-layout">
         <section class="view-panel">
-          <div class="panel-head"><h3>Superficie 3D de concentración</h3><span>Arrastra para orbitar · rueda para acercar</span></div>
+          <div class="panel-head"><h3>Transporte y dispersión dentro del suelo</h3><span>El frente se obtiene del campo calculado sobre el umbral</span></div>
           <canvas class="render-canvas" id="plume3d" aria-label="Superficie tridimensional de la pluma"></canvas>
-          <div class="color-legend"><span>Umbral detectable</span><span class="legend-ramp"></span><span>Concentración alta</span></div>
-          <div class="view-footer" id="plumeReadout">La malla se representa como una superficie continua interpolada, no como bloques.</div>
-        </section>
-        <section class="view-panel">
-          <div class="panel-head"><h3>Corte vertical X–Z</h3><span id="sectionDay">s/d</span></div>
-          <canvas class="section-canvas" id="section2d" aria-label="Corte vertical de la concentración"></canvas>
-          <div class="color-legend"><span>Fondo</span><span class="legend-ramp"></span><span>Máximo</span></div>
-          <div class="view-footer">El corte y la pluma 3D muestran el mismo perfil y el mismo instante.</div>
+          <div class="color-legend"><span>Umbral detectable</span><span class="legend-ramp"></span><span>Concentración alta · escala logarítmica relativa al máximo</span></div>
+          <div class="view-footer" id="plumeReadout">La escena conserva los datos científicos de la corrida; los estratos del modelo ilustran el medio, no sustituyen los perfiles ingresados.</div>
         </section>
       </div>
       <section class="plot-section">
@@ -503,7 +522,7 @@
     const $ = (id) => document.getElementById(id);
     const chemicalCatalog = JSON.parse($('chemicalCatalog').textContent);
     const catalogById = new Map(chemicalCatalog.map((record) => [record.id, record]));
-    const app = { runs: [], currentCut: 0, currentSoil: 0, playing: false, raf: 0, lastFrame: 0, lastPlotCut: -1, yaw: -0.72, pitch: 0.34, zoom: 1, drag: null, example: false, catalogSelection: null };
+    const app = { runs: [], currentCut: 0, currentSoil: 0, playing: false, raf: 0, lastFrame: 0, lastPlotCut: -1, lastParentCut: -1, lastParentSoil: -1, yaw: -0.72, pitch: 0.34, zoom: 1, drag: null, example: false, catalogSelection: null };
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
     const num = (id) => {
       const value = $(id).value.trim();
@@ -653,7 +672,7 @@
       for (const [key, label, type] of cells) {
         const td = document.createElement('td');
         const input = document.createElement('input');
-        input.type = type; input.dataset.key = key; input.setAttribute('aria-label', label);
+        input.type = type; input.name = `soil-${key}`; input.dataset.key = key; input.setAttribute('aria-label', label);
         if (type === 'number') { input.min = '0'; input.step = 'any'; }
         input.value = values[key] == null ? '' : String(values[key]);
         td.appendChild(input); row.appendChild(td);
@@ -897,7 +916,13 @@
       $('exampleNote').classList.remove('visible');
       let cfg;
       try { cfg = readConfig(); }
-      catch (error) { $('formError').textContent = error.message; $('formError').classList.add('visible'); return; }
+      catch (error) {
+        $('formError').textContent = error.message;
+        $('formError').classList.add('visible');
+        notifyParent('edmunds:run-state', { state: 'error' });
+        return;
+      }
+      notifyParent('edmunds:run-state', { state: 'running' });
       $('runStatus').textContent = 'Resolviendo volúmenes finitos…';
       $('results').classList.remove('visible');
       $('runSimulation').disabled = true;
@@ -906,6 +931,8 @@
         try {
           const runs = cfg.profiles.map((profile) => solveProfile(cfg, profile));
           app.runs = runs; app.cfg = cfg; app.currentSoil = 0; app.currentCut = 0; app.lastPlotCut = -1;
+          app.solutionId = (app.solutionId || 0) + 1;
+          app.lastParentCut = -1; app.lastParentSoil = -1;
           app.example = false; app.geometryDirty = true; app.lastPaintCut = -1; app.lastPaintSoil = -1;
           $('results').classList.add('visible');
           $('runStatus').textContent = `${runs.length} perfil${runs.length === 1 ? '' : 'es'} · ${cfg.nx} × ${cfg.ny} × ${cfg.nz} celdas · ${runs[0].timeline.length} cortes`;
@@ -914,11 +941,13 @@
           refreshSoilSelect();
           renderPlots(); renderMilestones(); renderDistance();
           updateFrame();
-          $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          notifyParent('edmunds:run-state', { state: 'complete' });
+          if (window.parent === window) $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
         } catch (error) {
           $('formError').textContent = error.message;
           $('formError').classList.add('visible');
           $('runStatus').textContent = 'Corrida no completada';
+          notifyParent('edmunds:run-state', { state: 'error' });
         } finally {
           $('runSimulation').disabled = false;
           $('runSimulation').textContent = '▶ INICIAR SIMULACIÓN';
@@ -928,6 +957,33 @@
 
     function currentRun() { return app.runs[app.currentSoil] || null; }
     function currentSnapshot(run = currentRun()) { return run ? run.frames[app.currentCut] : null; }
+
+    function notifyParent(type, detail = {}) {
+      if (window.parent === window) return;
+      const targetOrigin = window.location.origin === 'null' ? '*' : window.location.origin;
+      window.parent.postMessage({ type, ...detail }, targetOrigin);
+    }
+
+    function notifyParentSnapshot(run, field, cfg, day) {
+      if (window.parent === window || (app.lastParentCut === app.currentCut && app.lastParentSoil === app.currentSoil)) return;
+      app.lastParentCut = app.currentCut;
+      app.lastParentSoil = app.currentSoil;
+      const targetOrigin = window.location.origin === 'null' ? '*' : window.location.origin;
+      window.parent.postMessage({
+        type: 'edmunds:snapshot',
+        snapshot: {
+          nx: cfg.nx, ny: cfg.ny, nz: cfg.nz, L: cfg.L, W: cfg.W, Z: cfg.Z,
+          threshold: cfg.threshold, day, profile: run.profile.symbol,
+          cut: app.currentCut, cuts: run.timeline.length,
+          solution: app.solutionId,
+          sourceX0: cfg.sx0, sourceX1: cfg.sx1, sourceY0: cfg.sy0, sourceY1: cfg.sy1,
+          sourceZ0: cfg.sz0, sourceZ1: cfg.sz1, sourceMode: cfg.mode,
+          sourceClose: Number.isFinite(cfg.close) ? cfg.close : null,
+          field: Array.from(field)
+        }
+      }, targetOrigin);
+    }
+
     function frontStats(run, snapshot, cfg) {
       let front = 0, volume = 0, maxC = 0, overMass = 0;
       for (let z = 0; z < cfg.nz; z++) for (let y = 0; y < cfg.ny; y++) for (let x = 0; x < cfg.nx; x++) {
@@ -955,12 +1011,10 @@
       $('hudMass').textContent = `${fmt(stats.overMass, 4)} kg`;
       $('hudClosure').textContent = `${fmt(run.closureByCut[app.currentCut], 2)} %`;
       $('dayReadout').textContent = `Día ${fmt(day, 1)} · ${run.profile.symbol}`;
-      $('sectionDay').textContent = `Día ${fmt(day, 1)} · ${run.profile.symbol}`;
       $('timeSlider').value = String(app.currentCut);
       $('plumeReadout').textContent = `${stats.front > 0 ? `Frente detectado a ${fmt(stats.front, 2)} m` : 'Sin concentración sobre el umbral detectable'} · ${fmt(stats.maxC, 3)} mg/L máximo · clic y arrastre para orbitar`;
       if (app.lastPaintCut !== app.currentCut || app.lastPaintSoil !== app.currentSoil || app.geometryDirty) {
         drawPlume(run, snapshot, cfg);
-        drawSection(run, snapshot, cfg);
         app.lastPaintCut = app.currentCut;
         app.lastPaintSoil = app.currentSoil;
         app.geometryDirty = false;
@@ -969,6 +1023,7 @@
         drawArrivalPlots();
         app.lastPlotCut = app.currentCut;
       }
+      notifyParentSnapshot(run, snapshot, cfg, day);
     }
 
     function thresholdTimes(values, threshold) {
@@ -1134,51 +1189,50 @@
       updateDistanceForProfile();
     }
 
-    function drawSection(run, field, cfg) {
-      const canvas = $('section2d'), { ctx, width, height } = canvasContext(canvas, 220);
-      ctx.clearRect(0, 0, width, height); ctx.fillStyle = '#141612'; ctx.fillRect(0,0,width,height);
-      const left = 38, top = 12, plotW = width - 53, plotH = height - 35;
-      let max = 0;
-      for (let z = 0; z < cfg.nz; z++) for (let x = 0; x < cfg.nx; x++) max = Math.max(max, field[run.index(x,Math.floor(cfg.ny/2),z)]);
-      const scale = document.createElement('canvas'); scale.width = cfg.nx; scale.height = cfg.nz;
-      const sctx = scale.getContext('2d'), image = sctx.createImageData(cfg.nx,cfg.nz);
-      for (let z = 0; z < cfg.nz; z++) for (let x = 0; x < cfg.nx; x++) {
-        const c = field[run.index(x,Math.floor(cfg.ny/2),z)];
-        const value = max > 0 ? Math.log1p(9 * c / max) / Math.log(10) : 0;
-        const color = colorAt(value), p = (z * cfg.nx + x) * 4;
-        image.data[p] = color[0]; image.data[p+1] = color[1]; image.data[p+2] = color[2]; image.data[p+3] = c >= cfg.threshold ? 235 : 30;
-      }
-      sctx.putImageData(image,0,0);
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(scale,left,top,plotW,plotH);
-      ctx.strokeStyle = '#d7d2c8'; ctx.lineWidth = 1;
-      const thresholdRatio = max > 0 ? cfg.threshold / max : 1;
-      if (thresholdRatio < 1) {
-        ctx.globalAlpha = .75;
-        ctx.beginPath();
-        let hasPath = false;
-        for (let x = 0; x < cfg.nx; x++) {
-          let zDetect = -1;
-          for (let z = 0; z < cfg.nz; z++) if (field[run.index(x,Math.floor(cfg.ny/2),z)] >= cfg.threshold) zDetect = z;
-          if (zDetect >= 0) {
-            const px = left + x / cfg.nx * plotW, py = top + zDetect / cfg.nz * plotH;
-            if (!hasPath) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-            hasPath = true;
-          } else hasPath = false;
-        }
-        ctx.stroke(); ctx.globalAlpha = 1;
-      }
-      ctx.fillStyle = '#aaa596'; ctx.font = '10px Segoe UI'; ctx.fillText('0',left, height-8);
-      ctx.textAlign = 'right'; ctx.fillText(`${fmt(cfg.L,0)} m`,left+plotW,height-8); ctx.textAlign = 'left';
-      ctx.save(); ctx.translate(12,top+plotH/2); ctx.rotate(-Math.PI/2); ctx.fillText('Profundidad (m)',0,0); ctx.restore();
-    }
-
     function projectPoint(point, cfg, width, height) {
       const cy = Math.cos(app.yaw), sy = Math.sin(app.yaw), cp = Math.cos(app.pitch), sp = Math.sin(app.pitch);
       const x = point[0] - cfg.L/2, y = point[1] - cfg.W/2, z = -point[2] + cfg.Z/2;
       const rx = x*cy - y*sy, ry = x*sy + y*cy;
       const scale = Math.min((width-80)/(cfg.L+cfg.W), (height-70)/(cfg.Z + (cfg.L+cfg.W)*.45)) * app.zoom;
       return { x: width/2 + rx*scale, y: height/2 + (ry*sp - z*cp)*scale + 15, depth: ry*cp + z*sp };
+    }
+
+    function drawSoilBlock(ctx, project, cfg) {
+      const strata = [
+        { depth: 0, color: '#77705a' },
+        { depth: .17, color: '#625947' },
+        { depth: .39, color: '#78634b' },
+        { depth: .64, color: '#514b3e' },
+        { depth: .83, color: '#675846' },
+        { depth: 1, color: '#45463d' }
+      ];
+      const polygon = (points, fill, stroke = null) => {
+        const projected = points.map(project);
+        ctx.beginPath();
+        projected.forEach((point, index) => {
+          if (index === 0) ctx.moveTo(point.x, point.y);
+          else ctx.lineTo(point.x, point.y);
+        });
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+        if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+      };
+      polygon([[0,0,0],[cfg.L,0,0],[cfg.L,cfg.W,0],[0,cfg.W,0]], 'rgba(104,101,78,.44)');
+      for (let layer = 0; layer < strata.length - 1; layer++) {
+        const upper = strata[layer], lower = strata[layer + 1];
+        const z0 = cfg.Z * upper.depth, z1 = cfg.Z * lower.depth, color = upper.color;
+        polygon([[0,0,z0],[cfg.L,0,z0],[cfg.L,0,z1],[0,0,z1]], `${color}d9`, '#c3ab7950');
+        polygon([[0,0,z0],[0,cfg.W,z0],[0,cfg.W,z1],[0,0,z1]], `${color}a8`, '#c3ab7938');
+      }
+      ctx.save();
+      ctx.globalAlpha = .18;
+      ctx.fillStyle = '#e4d3a9';
+      for (let x = 0; x < 10; x++) for (let z = 0; z < 6; z++) {
+        const point = project([(x + .35) / 10 * cfg.L, 0, (z + .35) / 6 * cfg.Z]);
+        ctx.beginPath(); ctx.arc(point.x, point.y, 1.1, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
     }
 
     function extractSmoothSurface(run, field, cfg, iso) {
@@ -1259,6 +1313,7 @@
       const project = (p) => projectPoint(p,cfg,width,height);
       const corners = [[0,0,0],[cfg.L,0,0],[cfg.L,cfg.W,0],[0,cfg.W,0],[0,0,cfg.Z],[cfg.L,0,cfg.Z],[cfg.L,cfg.W,cfg.Z],[0,cfg.W,cfg.Z]];
       const edges = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+      drawSoilBlock(ctx,project,cfg);
       ctx.strokeStyle='#717467'; ctx.lineWidth=1;
       for (const [a,b] of edges) { const p=project(corners[a]), q=project(corners[b]); ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke(); }
       ctx.strokeStyle='#ffffff14'; ctx.lineWidth=.7;
@@ -1344,11 +1399,13 @@
       if (app.currentCut >= app.runs[0].frames.length-1) app.currentCut=0;
       app.playProgress=app.currentCut;
       app.playing=true;app.lastFrame=0;$('playPause').textContent='Ⅱ Pausar';
+      notifyParent('edmunds:playback-state', { playing: true });
       app.raf=requestAnimationFrame(playFrame);
     }
     function stopPlayback() {
       app.playing=false;cancelAnimationFrame(app.raf);
       if($('playPause'))$('playPause').textContent='▶ Reproducir';
+      notifyParent('edmunds:playback-state', { playing: false });
     }
     function playFrame(timestamp) {
       if(!app.playing)return;
@@ -1453,7 +1510,27 @@
     $('playSpeed').addEventListener('change',()=>{app.playProgress=app.currentCut;});
     $('soilView').addEventListener('change',(event)=>{app.currentSoil=Number(event.target.value);renderMilestones();renderPlots();updateDistanceForProfile();updateFrame();});
     $('exportCsv').addEventListener('click',exportGridCsv);
-    window.addEventListener('resize',()=>{if(currentRun()){drawArrivalPlots();renderDistance();app.geometryDirty=true;updateFrame();}});
+    $('clearAll').addEventListener('click',notifyParentReset);
+    let parentHeightTimer = 0;
+    function notifyParentHeight() {
+      if (window.parent === window) return;
+      clearTimeout(parentHeightTimer);
+      parentHeightTimer = setTimeout(() => {
+        const height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+        window.parent.postMessage({ type: 'edmunds:height', height }, window.location.origin === 'null' ? '*' : window.location.origin);
+      }, 90);
+    }
+    function notifyParentReset() {
+      if (window.parent !== window) {
+        window.parent.postMessage({ type: 'edmunds:reset' }, window.location.origin === 'null' ? '*' : window.location.origin);
+      }
+    }
+    window.addEventListener('resize',()=>{
+      if(currentRun()){drawArrivalPlots();renderDistance();app.geometryDirty=true;updateFrame();}
+      notifyParentHeight();
+    });
+    if ('ResizeObserver' in window) new ResizeObserver(notifyParentHeight).observe(document.body);
+    notifyParentHeight();
     attachOrbit();
     const rampStops=CL_RAMPA.map(([position,color])=>`rgb(${color.join(',')}) ${position*100}%`).join(', ');
     document.querySelectorAll('.legend-ramp').forEach((element)=>{element.style.background=`linear-gradient(90deg, ${rampStops})`;});
